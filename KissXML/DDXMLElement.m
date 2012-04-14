@@ -788,6 +788,24 @@
 	}
 }
 
+- (void)removeChild:(DDXMLNode*)node {
+    xmlNodePtr nodePtr = (xmlNodePtr)node->genericPtr;
+    
+    xmlNodePtr child = ((xmlNodePtr)genericPtr)->children;
+    while (child != NULL)
+    {   
+        // Ignore all but element, comment, text, or processing instruction nodes      if (IsXmlNodePtr(child))
+        {   
+            if (child == nodePtr)
+            {   
+                [DDXMLNode removeChild:child];
+                return;
+            }      
+        }      
+        child = child->next;
+    }      
+}
+
 - (void)setChildren:(NSArray *)children
 {
 #if DDXML_DEBUG_MEMORY_ISSUES

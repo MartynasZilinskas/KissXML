@@ -101,6 +101,37 @@
 	return [self initWithDocPrimitive:doc owner:nil];
 }
 
+- (id)initWithReadIO:(xmlInputReadCallback)ioread closeIO:(xmlInputCloseCallback)ioclose context:(void*)ioctx options:(NSUInteger)mask error:(NSError **)error {
+    
+    // Even though xmlKeepBlanksDefault(0) is called in DDXMLNode's initialize method,
+    // it has been documented that this call seems to get reset on the iPhone:
+    // http://code.google.com/p/kissxml/issues/detail?id=8
+    // 
+    // Therefore, we call it again here just to be safe.
+    xmlKeepBlanksDefault(0);
+    
+    xmlDocPtr doc = xmlReadIO(ioread, ioclose, ioctx, NULL, NULL, mask);
+    if (doc == NULL)
+    {
+        if (error) *error = [NSError errorWithDomain:@"DDXMLErrorDomain" code:1 userInfo:nil];
+        
+        return nil;
+    }
+    
+    return [self initWithDocPrimitive:doc owner:nil];
+}
+
+- (id)initWithRootElement:(DDXMLElement *)element {
+    xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+    if (self = [self initWithDocPrimitive:doc owner:nil]) {
+        if (element) {
+            [self setRootElement:element];
+        }
+    }
+    
+    return self;
+}
+
 /**
  * Returns the root element of the receiver.
 **/
@@ -120,6 +151,11 @@
 		return [DDXMLElement nodeWithElementPrimitive:rootNode owner:self];
 	else
 		return nil;
+}
+
+- (void)setRootElement:(DDXMLNode *)root {
+    xmlDocPtr doc = (xmlDocPtr)genericPtr;
+    xmlDocSetRootElement(doc, (xmlNodePtr)root->genericPtr);
 }
 
 - (NSData *)XMLData
